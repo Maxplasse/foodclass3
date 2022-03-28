@@ -10,10 +10,38 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2022_03_28_160537) do
+ActiveRecord::Schema.define(version: 2022_03_28_163925) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
+
+  create_table "active_storage_attachments", force: :cascade do |t|
+    t.string "name", null: false
+    t.string "record_type", null: false
+    t.bigint "record_id", null: false
+    t.bigint "blob_id", null: false
+    t.datetime "created_at", null: false
+    t.index ["blob_id"], name: "index_active_storage_attachments_on_blob_id"
+    t.index ["record_type", "record_id", "name", "blob_id"], name: "index_active_storage_attachments_uniqueness", unique: true
+  end
+
+  create_table "active_storage_blobs", force: :cascade do |t|
+    t.string "key", null: false
+    t.string "filename", null: false
+    t.string "content_type"
+    t.text "metadata"
+    t.string "service_name", null: false
+    t.bigint "byte_size", null: false
+    t.string "checksum", null: false
+    t.datetime "created_at", null: false
+    t.index ["key"], name: "index_active_storage_blobs_on_key", unique: true
+  end
+
+  create_table "active_storage_variant_records", force: :cascade do |t|
+    t.bigint "blob_id", null: false
+    t.string "variation_digest", null: false
+    t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
+  end
 
   create_table "chefs", force: :cascade do |t|
     t.string "restaurant_name"
@@ -27,12 +55,12 @@ ActiveRecord::Schema.define(version: 2022_03_28_160537) do
 
   create_table "comments", force: :cascade do |t|
     t.text "content"
-    t.bigint "course_id", null: false
-    t.bigint "participation_id", null: false
+    t.bigint "user_id", null: false
+    t.bigint "post_id", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
-    t.index ["course_id"], name: "index_comments_on_course_id"
-    t.index ["participation_id"], name: "index_comments_on_participation_id"
+    t.index ["post_id"], name: "index_comments_on_post_id"
+    t.index ["user_id"], name: "index_comments_on_user_id"
   end
 
   create_table "courses", force: :cascade do |t|
@@ -40,7 +68,7 @@ ActiveRecord::Schema.define(version: 2022_03_28_160537) do
     t.string "difficulty"
     t.string "category"
     t.integer "duration"
-    t.integer "participants_total"
+    t.integer "total_participations"
     t.integer "level_points"
     t.datetime "start_at"
     t.datetime "end_at"
@@ -48,6 +76,24 @@ ActiveRecord::Schema.define(version: 2022_03_28_160537) do
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
     t.index ["chef_id"], name: "index_courses_on_chef_id"
+  end
+
+  create_table "emojis", force: :cascade do |t|
+    t.string "content"
+    t.bigint "user_id", null: false
+    t.bigint "post_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["post_id"], name: "index_emojis_on_post_id"
+    t.index ["user_id"], name: "index_emojis_on_user_id"
+  end
+
+  create_table "invitations", force: :cascade do |t|
+    t.string "email"
+    t.bigint "user_id", null: false
+    t.datetime "created_at", precision: 6, null: false
+    t.datetime "updated_at", precision: 6, null: false
+    t.index ["user_id"], name: "index_invitations_on_user_id"
   end
 
   create_table "messages", force: :cascade do |t|
@@ -76,6 +122,7 @@ ActiveRecord::Schema.define(version: 2022_03_28_160537) do
     t.bigint "course_id", null: false
     t.datetime "created_at", precision: 6, null: false
     t.datetime "updated_at", precision: 6, null: false
+    t.datetime "posted_at"
     t.index ["course_id"], name: "index_posts_on_course_id"
     t.index ["participation_id"], name: "index_posts_on_participation_id"
   end
@@ -98,10 +145,15 @@ ActiveRecord::Schema.define(version: 2022_03_28_160537) do
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
+  add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "chefs", "users"
-  add_foreign_key "comments", "courses"
-  add_foreign_key "comments", "participations"
+  add_foreign_key "comments", "posts"
+  add_foreign_key "comments", "users"
   add_foreign_key "courses", "chefs"
+  add_foreign_key "emojis", "posts"
+  add_foreign_key "emojis", "users"
+  add_foreign_key "invitations", "users"
   add_foreign_key "messages", "courses"
   add_foreign_key "messages", "participations"
   add_foreign_key "participations", "courses"
